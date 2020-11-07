@@ -2,13 +2,13 @@ import React from 'react';
 import "./App.css"
 import socketIOClient from 'socket.io-client';
 import Chat from "./Components/Chat"
+import UsersPanel from "./Components/UsersPanel"
 
 class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       username: "",
-      colour: "",
       messages: [],
       onlineUsers: [],
       message: "",
@@ -24,44 +24,48 @@ class App extends React.Component {
 
     this.socket.on("successful connect", (data) => {
       this.setState({
-        username: data.id,
+        username: data.username,
         onlineUsers: data.users,
         messages: data.messages,
       });
     })
     
-    this.socket.on("connected", (id, users) => {
-      this.userConnected( id, users);
+    this.socket.on("user connected", (message, users) => {
+      this.receivedMessage(message);
+      this.setState({
+        onlineUsers: users,
+      });
     })
 
-    this.socket.on("message received", message => {
-      console.log(message);
+    this.socket.on("color changed", (message) => {
       this.receivedMessage(message);
     })
 
-    this.socket.on("disconnect", (id, users) => {
-        this.userDisconnected(users, id);
+    this.socket.on("users updated", (users, messages) => {
+      this.setState({
+        onlineUsers: users,
+      });
+      if (messages) {
+        this.setState({
+          messages: messages,
+        })
+      }
+    })
+
+    this.socket.on("message received", message => {
+      this.receivedMessage(message);
+    })
+
+    this.socket.on("user disconnected", (message, users) => {
+      this.receivedMessage(message);
+      this.setState({
+        onlineUsers: users,
+      });
     })
   }
 
   componentWillUnmount(){
     this.socket.close();
-  }
-
-  userConnected( id, users) {
-    let message = { id: id, body: "connected to chat" };
-    this.receivedMessage(message);
-    this.setState({
-      onlineUsers: users,
-    });
-  }
-
-  userDisconnected(users, id) {
-    let message = { id: id, body: "disconnected from chat" }
-    this.receivedMessage(message);
-    this.setState({
-      onlineUsers: users,
-    });
   }
 
   receivedMessage(message) {
@@ -95,17 +99,21 @@ class App extends React.Component {
 
   sendMessage(e) {
     e.preventDefault();
+    if (this.state.message === "") return;
     let detectedCommand = this.detectCommand();
     if (detectedCommand) {
+      this.setState({
+        message: "",
+      });
       this.socket.emit(detectedCommand.command, detectedCommand.argument);
     } else {
       const messageObject = {
         body: this.state.message,
-        id: this.state.username,
+        username: this.state.username,
       };
       this.setState({
         message: "",
-      })
+      });
       this.socket.emit("send message", messageObject);
     }
   }
@@ -120,22 +128,13 @@ class App extends React.Component {
     return (
       <div className="page">
         <div className="chat-wrapper">
-          <Chat messages={this.state.messages} username={this.state.username}></Chat>
+          <Chat messages={this.state.messages} username={this.state.username} users={this.state.onlineUsers}></Chat>
           <form onSubmit={this.sendMessage}>
             <textarea value={this.state.message} onChange={this.handleMessageChange} placeholder="Type a message..." />
             <button>Send</button>
           </form>
         </div>
-        <div className="user-panel">
-          <h2>Online Users</h2>
-          {
-              // this.state.onlineUsers.map((id, index) => {
-              //   return (
-              //     <div className="user" key={index}>{id}</div>
-              //   )
-              // }) 
-          }
-        </div> 
+        <UsersPanel currentUser={this.state.username} users={this.state.onlineUsers || []}></UsersPanel>
       </div>
     );
   }

@@ -6,9 +6,9 @@ class Message extends React.Component {
     <div className={this.props.type}>
       <div className="row" key={this.props.index}>
         <div className="message-bubble">
-          <div className="username" style={{color: "rgb("+this.props.message.color+")"}}>{this.props.message.id}</div>
-          <div>{this.props.message.body}</div> 
-          <div>{this.props.message.timeStamp}</div>
+          <div className="username-text" style={{color: "rgb("+this.props.color+")"}}>{this.props.message.username}</div>
+          <span className="message-text">{this.props.message.body}</span> 
+          <div className="timestamp-text">{this.props.message.timeStamp}</div>
         </div>
       </div>
     </div>

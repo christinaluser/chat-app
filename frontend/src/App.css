@@ -1,8 +1,8 @@
 .page {
   margin: auto;
-  height: 85vh;
+  height: 95vh;
   width: max-content;
-  min-width: 950px;
+  max-width: 960px;
   display: flex;
   flex-direction: row;
 }
@@ -39,6 +39,16 @@
   margin: 10px 0px 10px 10px;
 }
 
+.message-bubble {
+  min-width: 50%;
+  width: max-content;
+  max-width: 75%;
+  padding: 10px;
+  border: 1px solid dimgrey;
+  border-radius: 10px;
+  word-wrap:break-word;
+}
+
 .outgoing-message .row {
   width: 100%;
   display: flex;
@@ -47,14 +57,10 @@
 }
 
 .outgoing-message .message-bubble {
-  width: 75%;
   background-color: rgb(255, 208, 215);
-  color: dimgrey;
-  padding: 10px;
   margin: 5px 10px 5px auto;
   text-align: right;
-  border: 1px solid dimgrey;
-  border-radius: 10px 10px 0px 10px;
+  border-bottom-right-radius: 0px;
 }
 
 .incoming-message .row {
@@ -62,14 +68,35 @@
 }
 
 .incoming-message .message-bubble {
-  width: 75%;
   background-color: lavender;
-  color: dimgrey;
   text-align: left;
-  padding: 10px;
   margin: 5px auto 5px 10px;
-  border: 1px solid dimgrey;
-  border-radius: 10px 10px 10px 0px;
+  border-bottom-left-radius: 0px;
+}
+
+.notification .row {
+  justify-content: flex-start;
+}
+
+.notification .message-bubble {
+  background-color: papayawhip;
+  text-align: left;
+  margin: 5px auto;
+}
+
+.message-text {
+  color: dimgrey;
+  font-size: larger;
+}
+
+.username-text {
+  font-size: larger;
+  font-weight: 500;
+}
+
+.timestamp-text {
+  font-size: medium;
+  font-weight: 200;
 }
 
 textarea {
@@ -89,4 +116,21 @@ form {
 button {
   height: min-content;
   margin-top: auto;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  border-radius: 10px;
+}
+ 
+::-webkit-scrollbar-thumb {
+  background: pink; 
+  border-radius: 20px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: plum; 
 }
