@@ -39,14 +39,14 @@
   margin: 10px 0px 10px 10px;
 }
 
-.row {
+.outgoing-message .row {
   width: 100%;
   display: flex;
   justify-content: flex-end;
   margin-top: 10px;
 }
 
-.message {
+.outgoing-message .message-bubble {
   width: 75%;
   background-color: rgb(255, 208, 215);
   color: dimgrey;
@@ -57,11 +57,11 @@
   border-radius: 10px 10px 0px 10px;
 }
 
-.partner-row {
+.incoming-message .row {
   justify-content: flex-start;
 }
 
-.partner-message {
+.incoming-message .message-bubble {
   width: 75%;
   background-color: lavender;
   color: dimgrey;
