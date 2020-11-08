@@ -1,10 +1,22 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400;1,500&display=swap');
+
+*{
+  font-family: 'DM Mono', monospace;
+}
+
 .page {
   margin: auto;
   height: 95vh;
-  width: max-content;
+  width: 960px;
   max-width: 960px;
   display: flex;
   flex-direction: row;
+}
+
+@media (max-width: 960px){
+  .page {
+    width: 100%;
+  }
 }
 
 .chat-wrapper {
@@ -26,6 +38,7 @@
 }
 
 .user-panel {
+  font-size: larger;
   background-color: azure;
   display: flex;
   flex-direction: column;
@@ -37,6 +50,21 @@
   border-radius: 10px;
   padding: 5px 0px 10px;
   margin: 10px 0px 10px 10px;
+}
+
+.users-wrapper {
+  width:max-content;
+  height: max-content;
+  padding: 20px;
+}
+
+.empty-user {
+  display: none;
+}
+
+.info-wrapper {
+  padding: 20px;
+  overflow-wrap: break-word;
 }
 
 .message-bubble {
@@ -75,17 +103,16 @@
 }
 
 .notification .row {
-  justify-content: flex-start;
+  justify-content: center;
 }
 
 .notification .message-bubble {
   background-color: papayawhip;
-  text-align: left;
+  text-align: center;
   margin: 5px auto;
 }
 
 .message-text {
-  color: dimgrey;
   font-size: larger;
 }
 
@@ -96,7 +123,9 @@
 
 .timestamp-text {
   font-size: medium;
+  font-style: italic;
   font-weight: 200;
+  color: dimgrey;
 }
 
 textarea {
@@ -104,6 +133,7 @@ textarea {
   height: 100%;
   width: 100%;
   margin-right: 5px;
+  font-size: larger;
 }
 
 form {

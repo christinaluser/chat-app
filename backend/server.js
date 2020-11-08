@@ -1,6 +1,6 @@
 const express = require("express");
 const http = require("http");
-const { disconnect } = require("process");
+const { disconnect, connected } = require("process");
 const app = express();
 const server = http.createServer(app);
 const socket = require("socket.io");
@@ -12,8 +12,8 @@ let messages = [];
 
 io.on("connection", socket => {
   // add user list of online users. color code corresponds to dimgrey rgb(41, 41, 41)
-  let username = uniqueUsername();
-  onlineUsers.push({socketid: socket.id, username: username, color: "41, 41, 41"});
+  let username = generateUniqueUsername("user");
+  onlineUsers.push({socketid: socket.id, username: username, color: "#696969"});
   socket.emit("successful connect", {username: username, users: onlineUsers, messages:messages});
 
   // socket.emit("connect", onlineUsers);
@@ -29,18 +29,41 @@ io.on("connection", socket => {
   });
 
   socket.on("change username", body => {
-    //TODO: change username
+    if (onlineUsers.find(u => u.username === body)) {
+      socket.emit("username change denied", { username: "", body: "the username " + body + " is already taken"  } );
+    } else {
+      // update messages sent by user previously
+      let changedUser = onlineUsers.find(val => val.socketid === socket.id);
+      messages.forEach(message => {
+        if (message.username === changedUser.username) {
+          message.username = body;
+        } 
+      });
+      changedUser.username = body;
+      onlineUsers = onlineUsers.filter(val => val.socketid !== socket.id);
+      onlineUsers.push(changedUser);
+
+      // send updated user list and messages to everyone
+      io.emit("users updated", onlineUsers, messages);
+      // user notification message that their color has been changed but dont save for everyone
+      socket.emit("username changed", body, { username: "", body: "your username has been changed" } );
+    }
   });
 
   socket.on("change color", body => {
-    let changedUser = onlineUsers.find(val => val.socketid === socket.id);
-    changedUser.color = convertToRGBString(body);
-    onlineUsers = onlineUsers.filter(val => val.socketid !== socket.id);
-    onlineUsers.push(changedUser);
-    // user notification message that their color has been changed but dont save for everyone
-    socket.emit("color changed", { username: "", body: "your color has been changed" } );
-    // send new user list to everyone
-    io.emit("users updated", onlineUsers);
+    console.log(body)
+    if (validateHexColorCode(body)) {
+      let changedUser = onlineUsers.find(val => val.socketid === socket.id);
+      changedUser.color = "#" + body;
+      onlineUsers = onlineUsers.filter(val => val.socketid !== socket.id);
+      onlineUsers.push(changedUser);
+      // user notification message that their color has been changed but dont save for everyone
+      socket.emit("color changed", { username: "", body: "your color has been changed" } );
+      // send new user list to everyone
+      io.emit("users updated", onlineUsers);
+    } else {
+      socket.emit("color change denied", { username: "", body: "#" + body + " is not a valid hex color code"  } );
+    }
   });
 
   socket.on("disconnect", () => {
@@ -53,24 +76,27 @@ io.on("connection", socket => {
   });
 })
 
-function convertToRGBString(string) {
-  let splitString = string.match(/.{1,2}/g);
-  return splitString[0] + ", " + splitString[1] + ", " + splitString[2];
+function validateHexColorCode(code) {
+  if (code.length !== 6) return false;
+  if (code.match(RegExp("[0-9A-F]{6}", "i"))) return true;
+  return false;
 }
 
 function saveMessage(message) {
+  // if over 200 messages saved, remove oldest message
   if (messages.length === 200) {
-    //remove oldest msg
+    messages.splice(0,1);
   }
   messages.push(message);
 }
 
-function uniqueUsername() {
+// appends random number to base so that username is unique
+function generateUniqueUsername(base) {
   let randomInt = Math.floor(Math.random() * Math.floor(999));
-  let randomUsername = "user" + randomInt;;
+  let randomUsername = base + randomInt;;
   while (onlineUsers.find(u => u.username === randomUsername)) {
     randomInt = Math.floor(Math.random() * Math.floor(999));
-    randomUsername = "user" + randomInt;
+    randomUsername = base + randomInt;
   }
   if (!onlineUsers.find(u => u.username === randomUsername)) {
     return randomUsername;

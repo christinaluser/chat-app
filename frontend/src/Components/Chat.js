@@ -7,11 +7,10 @@ class Chat extends React.Component {
   getUserColor(username) {
     if (this.props.users){
       if (this.props.users.find(u => username === u.username)){
-        console.log(this.props.users.find(u => username === u.username))
         return this.props.users.find(u => username === u.username).color;
       }
     } else {
-      return "41, 41, 41";
+      return "#000000";
     }
   }
 
@@ -33,7 +32,9 @@ class Chat extends React.Component {
         {this.props.messages.map((message, index) => {
           return message.username === this.props.username ?
             <Message key={index} type="outgoing-message" message={message} color={this.getUserColor(message.username)}></Message> :
-            <Message key={index} type={message.username !== "" ? "incoming-message" : "notification" } message={message} color={this.getUserColor(message.username)}></Message>
+            message.username !== "" ?
+              <Message key={index} type="incoming-message"  message={message} color={this.getUserColor(message.username)}></Message>:
+              <Message key={index} type="notification" message={message}></Message>
         })}
         <div ref={(el) => { this.messagesEnd = el; }}></div>
       </div>

@@ -2,7 +2,7 @@ import React from 'react';
 import "./App.css"
 import socketIOClient from 'socket.io-client';
 import Chat from "./Components/Chat"
-import UsersPanel from "./Components/UsersPanel"
+import SidePanel from "./Components/SidePanel"
 
 class App extends React.Component {
   constructor(props) {
@@ -16,6 +16,7 @@ class App extends React.Component {
     this.sendMessage = this.sendMessage.bind(this);
     this.receivedMessage = this.receivedMessage.bind(this);
     this.handleMessageChange = this.handleMessageChange.bind(this)
+    this.enterPressed = this.enterPressed.bind(this);
   }
   
 
@@ -38,6 +39,23 @@ class App extends React.Component {
     })
 
     this.socket.on("color changed", (message) => {
+      this.receivedMessage(message);
+    })
+
+    this.socket.on("username changed", (username, message) => {
+      this.setState({
+        username: username,
+      });
+      this.receivedMessage(message);
+      
+    })
+
+    this.socket.on("username change denied", message => {
+      this.receivedMessage(message);
+      
+    })
+
+    this.socket.on("color change denied", message => {
       this.receivedMessage(message);
     })
 
@@ -88,9 +106,10 @@ class App extends React.Component {
     if (messageArr.length !== 2) return;
     
     if (messageArr[0].match(RegExp("/color"))) {
+      return {command: "change color", argument: messageArr[1]};
       // arg must be in the form RRGGBB ie.6 digits 
-      if (messageArr[1].length === 6 && messageArr[1].match(RegExp("\\d{6}")))
-        return {command: "change color", argument: messageArr[1]};
+      // if (messageArr[1].length === 6 && messageArr[1].match(RegExp(".{6}"))) //need to fix this
+        
     }
     if (messageArr[0].match(RegExp("/name"))) {
       return {command: "change username", argument: messageArr[1]}
@@ -101,6 +120,7 @@ class App extends React.Component {
     e.preventDefault();
     if (this.state.message === "") return;
     let detectedCommand = this.detectCommand();
+    console.log(this.detectCommand)
     if (detectedCommand) {
       this.setState({
         message: "",
@@ -124,17 +144,24 @@ class App extends React.Component {
     });
   }
 
+  enterPressed(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      this.sendMessage(e);
+    }
+  }
+
   render() {
     return (
       <div className="page">
         <div className="chat-wrapper">
           <Chat messages={this.state.messages} username={this.state.username} users={this.state.onlineUsers}></Chat>
           <form onSubmit={this.sendMessage}>
-            <textarea value={this.state.message} onChange={this.handleMessageChange} placeholder="Type a message..." />
-            <button>Send</button>
+            <textarea value={this.state.message} onChange={this.handleMessageChange} onKeyPress={e => this.enterPressed(e)} placeholder="Type a message..." />
+            <button type="submit">Send</button>
           </form>
         </div>
-        <UsersPanel currentUser={this.state.username} users={this.state.onlineUsers || []}></UsersPanel>
+        <SidePanel currentUser={this.state.username} users={this.state.onlineUsers || []}></SidePanel>
       </div>
     );
   }
