@@ -102,18 +102,20 @@ io.on("connection", socket => {
       changedUser.color = "#" + newColor;
       onlineUsers = onlineUsers.filter(val => val.id !== socket.id);
       onlineUsers.push(changedUser);
-      // user notification message that their color has been changed but dont save for everyone
-      const message = { id: "notification", body: "your color has been changed to #" + newColor };
-      socket.emit("user changed",{user: changedUser, message: message } );
+      
       // send new user list to everyone
       io.emit("users updated", {onlineUsers: onlineUsers});
+
+      // user notification message that their color has been changed but dont save for everyone
+      const message = { id: "notification", body: "your color has been changed to #" + newColor };
+      socket.emit("user changed", {user: changedUser, message: message } );
     } else {
       socket.emit("message received", { id: "notification", body: "#" + newColor + " is not a valid hex color code"  } );
     }
   });
 
   socket.on("unknown command", () => {
-    socket.emit("message received", { id: "", body: "trying to use a command? see info bar for options!"  } );
+    socket.emit("message received", { id: "notification", body: "trying to use a command? see info bar for options!"  } );
   });
 
   socket.on("disconnect", () => {
@@ -136,13 +138,15 @@ io.on("connection", socket => {
 
 function formatMessage(message) {
   let formattedMessage = message;
+  textEffectList.forEach(effect => {
+    formattedMessage = replaceMarkdownWithTextEffect(effect.regex, effect.startTag, effect.closeTag, formattedMessage)
+  });
+
   emojiList.forEach(emoji => {
     formattedMessage = replaceTextWithEmoji(emoji.regex, emoji.src, formattedMessage)
   });
 
-  textEffectList.forEach(effect => {
-    formattedMessage = replaceMarkdownWithTextEffect(effect.regex, effect.startTag, effect.closeTag, formattedMessage)
-  })
+  
   return formattedMessage;
 }
 

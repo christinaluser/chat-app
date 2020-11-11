@@ -18,7 +18,6 @@ class App extends React.Component {
     this.enterPressed = this.enterPressed.bind(this);
   }
   
-
   componentDidMount() {
     this.socket = socketIOClient();
 
@@ -120,19 +119,18 @@ class App extends React.Component {
   sendMessage(e) {
     e.preventDefault();
     if (this.state.message === "") return;
+    const messageObject = {
+      body: this.state.message,
+      id: sessionStorage.getItem("id"),
+    };
+    this.setState({
+      message: "",
+    });
+    this.socket.emit("send message", messageObject);
     let detectedCommand = this.detectCommand();
     if (detectedCommand) {
       this.socket.emit(detectedCommand.command, detectedCommand.argument);
     } 
-      const messageObject = {
-        body: this.state.message,
-        id: sessionStorage.getItem("id"),
-      };
-      this.setState({
-        message: "",
-      });
-      console.log(messageObject)
-      this.socket.emit("send message", messageObject);
     
   }
 
