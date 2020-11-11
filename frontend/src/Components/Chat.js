@@ -4,18 +4,22 @@ import Message from "./Message"
 
 class Chat extends React.Component {
 
-  getUserColor(username) {
+  getUserInfo(message) {
+    if (message.id === "notification") {
+      return {id: "notification", username: "", color: "#696969"}
+    }
+    if (message.username) {
+      return {id: "disconnected user", username: message.username + " (disconnected)", color: "#696969"}
+    }
     if (this.props.users){
-      if (this.props.users.find(u => username === u.username)){
-        return this.props.users.find(u => username === u.username).color;
-      }
+      return this.props.users.find(u => message.id === u.id);
     } else {
-      return "#000000";
+      return {username: "err", color: "#FF0000"};
     }
   }
 
   scrollToBottom = () => {
-    this.messagesEnd.scrollIntoView({ behavior: "smooth" });
+    this.end.scrollIntoView({ behavior: "smooth" });
   }
   
   componentDidMount() {
@@ -30,13 +34,14 @@ class Chat extends React.Component {
     return (
       <div className="messages-container">
         {this.props.messages.map((message, index) => {
-          return message.username === this.props.username ?
-            <Message key={index} type="outgoing-message" message={message} color={this.getUserColor(message.username)}></Message> :
-            message.username !== "" ?
-              <Message key={index} type="incoming-message"  message={message} color={this.getUserColor(message.username)}></Message>:
-              <Message key={index} type="notification" message={message}></Message>
+          if (message.id === sessionStorage.getItem("id"))
+            return <Message key={index} type="outgoing-message" message={message} user={this.getUserInfo(message)}></Message> 
+          else if (message.id !== "notification")
+            return <Message key={index} type="incoming-message"  message={message} user={this.getUserInfo(message)}></Message>
+          else
+            return <Message key={index} type="notification" message={message} user={this.getUserInfo(message)}> </Message>
         })}
-        <div ref={(el) => { this.messagesEnd = el; }}></div>
+        <div ref={(el) => { this.end = el; }}></div>
       </div>
     );
   }

@@ -8,7 +8,6 @@ class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      username: "",
       messages: [],
       onlineUsers: [],
       message: "",
@@ -23,61 +22,63 @@ class App extends React.Component {
   componentDidMount() {
     this.socket = socketIOClient();
 
-    this.socket.on("successful connect", (data) => {
+    this.socket.on("connect", () => {
+      let username = sessionStorage.getItem("username");
+      let color = sessionStorage.getItem("color");
+      let id = sessionStorage.getItem("id");
+      if (id && username && color) {
+        const user = { id: id, username: username, color: color}
+
+        this.socket.emit("connect existing user", user);
+      } else {
+        this.socket.emit("connect new user")
+      }
+    })
+
+    this.socket.on("successful connect", body => {
+      this.setSession(body.user);
+
       this.setState({
-        username: data.username,
-        onlineUsers: data.users,
-        messages: data.messages,
+        onlineUsers: body.onlineUsers,
+        messages: body.messageHistory,
       });
     })
     
-    this.socket.on("user connected", (message, users) => {
-      this.receivedMessage(message);
+    this.socket.on("user reconnected", body => {
+      this.receivedMessage(body.message);
       this.setState({
-        onlineUsers: users,
+        onlineUsers: body.onlineUsers,
+        messages: body.messageHistory,
       });
     })
 
-    this.socket.on("color changed", (message) => {
-      this.receivedMessage(message);
-    })
-
-    this.socket.on("username changed", (username, message) => {
+    this.socket.on("user connected", body => {
+      this.receivedMessage(body.message);
       this.setState({
-        username: username,
+        onlineUsers: body.onlineUsers,
       });
-      this.receivedMessage(message);
-      
     })
 
-    this.socket.on("username change denied", message => {
-      this.receivedMessage(message);
-      
+    this.socket.on("user changed", body => {
+      this.setSession(body.user)
+      this.receivedMessage(body.message);
     })
 
-    this.socket.on("color change denied", message => {
-      this.receivedMessage(message);
-    })
-
-    this.socket.on("users updated", (users, messages) => {
+    this.socket.on("users updated", body => {
       this.setState({
-        onlineUsers: users,
+        onlineUsers: body.onlineUsers,
       });
-      if (messages) {
-        this.setState({
-          messages: messages,
-        })
-      }
     })
 
     this.socket.on("message received", message => {
       this.receivedMessage(message);
     })
 
-    this.socket.on("user disconnected", (message, users) => {
-      this.receivedMessage(message);
+    this.socket.on("user disconnected", body => {
+      this.receivedMessage(body.message);
       this.setState({
-        onlineUsers: users,
+        onlineUsers: body.onlineUsers,
+        messages: body.messageHistory,
       });
     })
   }
@@ -101,41 +102,44 @@ class App extends React.Component {
   detectCommand() {
     // if doesnt start with "/" it isn't a command 
     if (!this.state.message.match(RegExp("^/"))) return;
+
     let messageArr = this.state.message.split(RegExp("\\s{1,}"));
-    // if more than 2 words, too many args to be a command
-    if (messageArr.length !== 2) return;
     
     if (messageArr[0].match(RegExp("/color"))) {
-      return {command: "change color", argument: messageArr[1]};
-      // arg must be in the form RRGGBB ie.6 digits 
-      // if (messageArr[1].length === 6 && messageArr[1].match(RegExp(".{6}"))) //need to fix this
-        
+      messageArr.shift();
+      return {command: "change color", argument: messageArr};
     }
     if (messageArr[0].match(RegExp("/name"))) {
-      return {command: "change username", argument: messageArr[1]}
+      messageArr.shift();
+      return {command: "change username", argument: messageArr}
     }
+
+    return {command: "unknown command", argument: { body: this.state.message, username: this.state.username }}
   }
 
   sendMessage(e) {
     e.preventDefault();
     if (this.state.message === "") return;
     let detectedCommand = this.detectCommand();
-    console.log(this.detectCommand)
     if (detectedCommand) {
-      this.setState({
-        message: "",
-      });
       this.socket.emit(detectedCommand.command, detectedCommand.argument);
-    } else {
+    } 
       const messageObject = {
         body: this.state.message,
-        username: this.state.username,
+        id: sessionStorage.getItem("id"),
       };
       this.setState({
         message: "",
       });
+      console.log(messageObject)
       this.socket.emit("send message", messageObject);
-    }
+    
+  }
+
+  setSession(user) {
+    sessionStorage.setItem("username", user.username);
+    sessionStorage.setItem("color", user.color);
+    sessionStorage.setItem("id", user.id);
   }
 
   handleMessageChange(e) {
@@ -155,13 +159,13 @@ class App extends React.Component {
     return (
       <div className="page">
         <div className="chat-wrapper">
-          <Chat messages={this.state.messages} username={this.state.username} users={this.state.onlineUsers}></Chat>
+          <Chat messages={this.state.messages} users={this.state.onlineUsers}></Chat>
           <form onSubmit={this.sendMessage}>
             <textarea value={this.state.message} onChange={this.handleMessageChange} onKeyPress={e => this.enterPressed(e)} placeholder="Type a message..." />
             <button type="submit">Send</button>
           </form>
         </div>
-        <SidePanel currentUser={this.state.username} users={this.state.onlineUsers || []}></SidePanel>
+        <SidePanel users={this.state.onlineUsers || []}></SidePanel>
       </div>
     );
   }
