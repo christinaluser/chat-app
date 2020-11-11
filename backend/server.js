@@ -17,12 +17,17 @@ let messageHistory = [];
 io.on("connection", socket => {
 
   socket.on("connect existing user", body => {
+    const id = body.id;
     const color = body.color;
     let username = body.username;
 
+    const usernameTaken = onlineUsers.find(u => {u.username === username && u.id !== id });
+    if (usernameTaken !== null) {
+      username = generateUniqueUsername("user");
+    }
+
     const user = {id: socket.id, username: username, color: color}
     onlineUsers.push(user);
-    console.log(onlineUsers)
 
     // update users old messages to contain their new id
     messageHistory.forEach(m => {
