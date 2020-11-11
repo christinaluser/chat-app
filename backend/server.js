@@ -1,12 +1,10 @@
 const express = require("express");
 const http = require("http");
-const cookieParser = require("cookie-parser");
 const app = express();
 const server = http.createServer(app);
 const socket = require("socket.io");
 const io = socket(server);
 const port = 8000;
-const fetch = require("node-fetch");
 
 const emojiList = [{regex: /:\)/g, src: "https://www.flaticon.com/svg/static/icons/svg/1933/1933663.svg"}, {regex: /:\(/g, src: "https://www.flaticon.com/svg/static/icons/svg/1933/1933260.svg"}, {regex: /:o/g, src: "https://www.flaticon.com/svg/static/icons/svg/1933/1933111.svg"}]
 const textEffectList = [{ regex: /[*]{2}/g, startTag: "<b>", closeTag: "</b>" }, { regex: /[\/\/]{2}/g, startTag: "<i>", closeTag: "</i>" }, { regex: /[__]{2}/g, startTag: "<u>", closeTag: "</u>" }]
