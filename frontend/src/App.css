@@ -1,9 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400;1,500&display=swap');
-
-*{
-  font-family: 'DM Mono', monospace;
-}
-
 .page {
   margin: auto;
   height: 95vh;
@@ -32,7 +26,6 @@
 }
 
 .side-panel {
-  font-size: larger;
   background-color: azure;
   display: flex;
   flex-direction: column;
@@ -51,6 +44,14 @@
   width:max-content;
   height: max-content;
   padding: 0px 15px;
+}
+
+.emojis-wrapper {
+  margin-bottom: 1em;
+}
+
+.commands-wrapper {
+  margin-top: auto;
 }
 
 .empty-user {
@@ -144,6 +145,7 @@ form {
 }
 
 button {
+  font-size: medium;
   height: min-content;
   margin-top: auto;
 }
@@ -172,16 +174,54 @@ button {
   }
   
   .chat-wrapper {
-    width: 100%;
+    width: 98%;
     height: 75%;
+    margin: auto;
   }
 
   .side-panel{
     height: 25%;
-    margin: 0px;
+    width: 98%;
+    margin: auto;
     padding: 0px;
     flex-direction: row;
     justify-content: space-between;
-    width: 100%;
+    overflow: hidden;
+  }
+
+  .side-panel-container {
+    height: 95%;
+  }
+
+  .users-wrapper {
+    margin-right: auto;
+    display: flex;
+    height: 45%;
+    width: max-content;
+    flex-direction: column;
+    flex-wrap: wrap;
+  }
+
+  .commands-wrapper {
+    margin-left: auto;
+    margin-right: 25px;
+  }
+  
+  .user {
+    padding: 0px 10px;
+  }
+
+  .markdowns-wrapper {
+    display: none;
+  }
+}
+
+@media (max-width: 650px) {
+  .commands-wrapper {
+    display: none;
+  }
+
+  .emojis-wrapper {
+    display: none;
   }
 }

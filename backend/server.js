@@ -19,11 +19,6 @@ io.on("connection", socket => {
   socket.on("connect existing user", body => {
     const color = body.color;
     let username = body.username;
-    // const userIndex = onlineUsers.findIndex(u => u.id = body.id);
-    // // console.log("already connected:", userAlreadyConnected, socket.id);
-    // if(userIndex < -1) {
-    //   onlineUsers.splice(userIndex, 1);
-    // } 
 
     const user = {id: socket.id, username: username, color: color}
     onlineUsers.push(user);
@@ -70,7 +65,7 @@ io.on("connection", socket => {
     }
 
     saveMessage(message);
-    io.emit("message received", message) // send message to all clients
+    io.emit("message received", message)
   });
 
   socket.on("change username", body => {

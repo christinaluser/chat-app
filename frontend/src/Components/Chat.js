@@ -12,7 +12,12 @@ class Chat extends React.Component {
       return {id: "disconnected user", username: message.username + " (disconnected)", color: "#696969"}
     }
     if (this.props.users){
-      return this.props.users.find(u => message.id === u.id);
+      const user = this.props.users.find(u => message.id === u.id);
+      if (user) {
+        return user;
+      } else {
+        return {id: "disconnected user", username: "disconnected user", color: "#696969"}
+      }
     } else {
       return {username: "err", color: "#FF0000"};
     }
