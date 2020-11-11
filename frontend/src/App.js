@@ -45,9 +45,9 @@ class App extends React.Component {
     
     this.socket.on("user reconnected", body => {
       this.receivedMessage(body.message);
+      this.updateMessageIds(body.prevId, body.newId)
       this.setState({
         onlineUsers: body.onlineUsers,
-        messages: body.messageHistory,
       });
     })
 
@@ -75,9 +75,10 @@ class App extends React.Component {
 
     this.socket.on("user disconnected", body => {
       this.receivedMessage(body.message);
+      this.addUsernameMessages(body.disconnectedId, body.disconnectedUsername)
       this.setState({
         onlineUsers: body.onlineUsers,
-        messages: body.messageHistory,
+        // messages: body.messageHistory,
       });
     })
   }
@@ -95,6 +96,36 @@ class App extends React.Component {
     }
     this.setState({
       messages: newMessages,
+    })
+  }
+
+  addUsernameMessages(id, username) {
+    if (!id || !username) return;
+    let updatedMessages = this.state.messages;
+    if (updatedMessages) {
+      updatedMessages.forEach(m => {
+        if (m.id === id) {
+          m.username = username;
+        }
+      });
+    }
+  }
+
+  updateMessageIds(prevId, newId) {
+    if (!prevId || !newId) return;
+    let updatedMessages = this.state.messages;
+    if (updatedMessages) {
+      updatedMessages.forEach(m => {
+        if (m.id === prevId) {
+          m.id = newId;
+          if (m.username) {
+            delete m.username;
+          }
+        }
+      });
+    }
+    this.setState({
+      messages: updatedMessages,
     })
   }
 

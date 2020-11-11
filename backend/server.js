@@ -17,21 +17,25 @@ let messageHistory = [];
 io.on("connection", socket => {
 
   socket.on("connect existing user", body => {
-    const id = body.id;
+    const prevId = body.id;
     const color = body.color;
     let username = body.username;
 
-    const usernameTaken = onlineUsers.find(u => {u.username === username && u.id !== id });
-    if (usernameTaken !== null) {
+    const usernameTaken = onlineUsers.find(u => u.username === username && u.id !== prevId);
+    if (usernameTaken) {
       username = generateUniqueUsername("user");
     }
 
     const user = {id: socket.id, username: username, color: color}
     onlineUsers.push(user);
 
+    const message = { id: "notification", body: username + " connected to chat" };
+    saveMessage(message);
+    socket.broadcast.emit("user reconnected", {message: message, onlineUsers: onlineUsers, prevId: prevId, newId: socket.id});
+
     // update users old messages to contain their new id
     messageHistory.forEach(m => {
-      if (m.id === body.id) {
+      if (m.id === prevId) {
         m.id = socket.id;
         if (m.username) {
           delete m.username;
@@ -39,10 +43,6 @@ io.on("connection", socket => {
       }
     })
     socket.emit("successful connect", {user: user, onlineUsers: onlineUsers, messageHistory: messageHistory});
-
-      const message = { id: "notification", body: username + " connected to chat" };
-      saveMessage(message);
-      socket.broadcast.emit("user reconnected", {message: message, onlineUsers: onlineUsers, messageHistory: messageHistory});
   });
 
   socket.on("connect new user", () => {
@@ -131,7 +131,7 @@ io.on("connection", socket => {
 
       let message = { id: "notification", body: disconnectedUsername + " disconnected from chat" };
       saveMessage(message);
-      io.emit("user disconnected", {message: message, onlineUsers: onlineUsers, messageHistory: messageHistory})
+      io.emit("user disconnected", {message: message, onlineUsers: onlineUsers, disconnectedId: socket.id, disconnectedUsername: disconnectedUsername})
 
   });
 })
