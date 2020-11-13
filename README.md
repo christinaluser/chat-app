@@ -1,3 +1,4 @@
+##Chat App
 single room chat app created using socket io, express, and react 
 
 ## Running the Project
