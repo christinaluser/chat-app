@@ -5,6 +5,7 @@ const server = http.createServer(app);
 const socket = require("socket.io");
 const io = socket(server);
 const port = 8000;
+const MAX_NUM_SAVED_MESSAGES = 200;
 
 const emojiList = [{regex: /:\)/g, src: "https://www.flaticon.com/svg/static/icons/svg/1933/1933663.svg"}, {regex: /:\(/g, src: "https://www.flaticon.com/svg/static/icons/svg/1933/1933260.svg"}, {regex: /:o/g, src: "https://www.flaticon.com/svg/static/icons/svg/1933/1933111.svg"}]
 const textEffectList = [{ regex: /[*]{2}/g, startTag: "<b>", closeTag: "</b>" }, { regex: /[\/\/]{2}/g, startTag: "<i>", closeTag: "</i>" }, { regex: /[__]{2}/g, startTag: "<u>", closeTag: "</u>" }]
@@ -29,10 +30,6 @@ io.on("connection", socket => {
     const user = {id: socket.id, username: username, color: color}
     onlineUsers.push(user);
 
-    const message = { id: "notification", body: username + " connected to chat" };
-    saveMessage(message);
-    socket.broadcast.emit("user reconnected", {message: message, onlineUsers: onlineUsers, prevId: prevId, newId: socket.id});
-
     // update users old messages to contain their new id
     messageHistory.forEach(m => {
       if (m.id === prevId) {
@@ -42,7 +39,14 @@ io.on("connection", socket => {
         }
       }
     })
+
+    let message = { id: "notification", body: "you connected to chat as " + username };
     socket.emit("successful connect", {user: user, onlineUsers: onlineUsers, messageHistory: messageHistory});
+    socket.emit("message received", message);
+
+    message = { id: "notification", body: username + " connected to chat" };
+    saveMessage(message);
+    socket.broadcast.emit("user reconnected", {message: message, onlineUsers: onlineUsers, prevId: prevId, newId: socket.id});
   });
 
   socket.on("connect new user", () => {
@@ -50,9 +54,11 @@ io.on("connection", socket => {
     const user = {id: socket.id, username: username, color: "#696969"}
     onlineUsers.push(user);
 
+    let message = { id: "notification", body: "you connected to chat as " + username };
     socket.emit("successful connect", {user: user, onlineUsers: onlineUsers, messageHistory: messageHistory});
+    socket.emit("message received", message)
 
-    const message = { id: "notification", body: username + " connected to chat" };
+    message = { id: "notification", body: username + " connected to chat" };
     saveMessage(message);
     socket.broadcast.emit("user connected", {message: message, onlineUsers: onlineUsers});
   });
@@ -145,7 +151,6 @@ function formatMessage(message) {
   emojiList.forEach(emoji => {
     formattedMessage = replaceTextWithEmoji(emoji.regex, emoji.src, formattedMessage)
   });
-
   
   return formattedMessage;
 }
@@ -198,7 +203,7 @@ function validateHexColorCode(code) {
 
 function saveMessage(message) {
   // if over 200 messages saved, remove oldest message
-  if (messageHistory.length === 200) {
+  if (messageHistory.length === MAX_NUM_SAVED_MESSAGES) {
     messageHistory.shift();
   }
   messageHistory.push(message);
@@ -206,10 +211,10 @@ function saveMessage(message) {
 
 // appends random number to base so that username is unique
 function generateUniqueUsername(base) {
-  let randomInt = Math.floor(Math.random() * Math.floor(999));
+  let randomInt = Math.floor(Math.random() * Math.floor(99));
   let randomUsername = base + randomInt;;
   while (onlineUsers.find(u => u.username === randomUsername)) {
-    randomInt = Math.floor(Math.random() * Math.floor(999));
+    randomInt = Math.floor(Math.random() * Math.floor(99));
     randomUsername = base + randomInt;
   }
   if (!onlineUsers.find(u => u.username === randomUsername)) {
